@@ -23,6 +23,12 @@ More skills (`stake-bean`, `compound-bean`, `automine-bean`) coming soon.
    - `AGENT_PRIVATE_KEY` — the EOA's private key
    - `AGENT_ADDRESS` — the EOA's public address
    - `BASE_RPC_URL` — a Base mainnet RPC URL (public works, dedicated is faster)
+
+   **Also required by AEON itself (separate from this skill):**
+   - `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY` — AEON uses Claude Code to interpret skill instructions. Get one from Anthropic's console or follow AEON's setup guide.
+   - Optionally `BANKR_LLM_KEY` if you'd rather route through Bankr's LLM Gateway (cheaper Opus on Vertex AI).
+
+   Each user pays for their own LLM usage. The MineBean team does not provide or subsidize Claude credits.
 7. **(Recommended) Run a dry run first.** Set `DRY_RUN=true` as a repo variable. The next cron tick will log what the skill would do without sending any transactions. Verify it looks right.
 8. **Remove `DRY_RUN` (or set to `false`) when ready.** The agent will start deploying on the next cron tick.
 9. **Monitor `memory/topics/minebean.md`** in your AEON fork for per-run logs.
