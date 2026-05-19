@@ -1,0 +1,23 @@
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs / memory files (if any get generated locally during testing)
+memory/
+logs/
+*.log
+
+# Foundry / cast cache
+out/
+cache/
+broadcast/
