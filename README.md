@@ -6,16 +6,17 @@ The skills are portable. They work inside an [AEON Framework](https://github.com
 
 ## Skills in this repo
 
-| Skill | What it does |
-|---|---|
-| [`mine-bean`](./mine-bean) | Deploys ETH on the MineBean grid on a configurable cron. Reads round state, avoids double-deploys, optionally auto-claims rewards above a threshold. |
+| Skill | Runtime | What it does |
+|---|---|---|
+| [`aeon-mine-bean`](./aeon-mine-bean) | AEON Framework | Deploys ETH on the MineBean grid via AEON's GitHub Actions cron. One session covers N consecutive rounds with local sleeps. Auto-claims above thresholds. |
+| [`hermes-mine-bean`](./hermes-mine-bean) | Hermes Agent | Same multi-round bash loop, ported to the [agentskills.io](https://agentskills.io) spec for [Hermes Agent](https://hermes-agent.nousresearch.com/). Supports Hermes' zero-Claude-cost `--no-agent --script` cron mode. |
 
 More skills (`stake-bean`, `compound-bean`, `automine-bean`) coming soon.
 
-## Quick start: running `mine-bean` inside AEON
+## Quick start: running `aeon-mine-bean` inside AEON
 
 1. **Fork [aaronjmars/aeon](https://github.com/aaronjmars/aeon)** to your own GitHub account.
-2. **Copy `mine-bean/` from this repo into `skills/mine-bean/`** in your AEON fork.
+2. **Copy `aeon-mine-bean/` from this repo into `skills/aeon-mine-bean/`** in your AEON fork.
 3. **Add the schedule entry from [`examples/aeon.yml`](./examples/aeon.yml) to your fork's `aeon.yml`.**
 4. **Generate a fresh EOA** for the agent. Note the public address and private key.
 5. **Fund the EOA** with a small amount of ETH on Base. ~0.01 ETH covers many days at default config. Treat it as a hot wallet — only fund what you can lose.
@@ -33,9 +34,9 @@ More skills (`stake-bean`, `compound-bean`, `automine-bean`) coming soon.
 8. **Remove `DRY_RUN` (or set to `false`) when ready.** The agent will start deploying on the next cron tick.
 9. **Monitor `memory/topics/minebean.md`** in your AEON fork for per-run logs.
 
-## Quick start: running `mine-bean` outside AEON
+## Quick start: running `aeon-mine-bean` standalone (no agent framework)
 
-The skill is just a SKILL.md plus bash scripts in `mine-bean/scripts/`. Any environment that can run bash + Foundry can use it directly:
+The skill is just a SKILL.md plus bash scripts in `aeon-mine-bean/scripts/`. Any environment that can run bash + Foundry can use it directly:
 
 ```bash
 # Install Foundry if you don't have it
@@ -43,7 +44,7 @@ curl -L https://foundry.paradigm.xyz | bash && foundryup
 
 # Clone this repo
 git clone https://github.com/<your-user>/minebean-skills.git
-cd minebean-skills/mine-bean
+cd minebean-skills/aeon-mine-bean
 
 # Copy env.example and fill in
 cp ../examples/env.example .env
@@ -58,9 +59,46 @@ bash scripts/claim.sh eth
 
 Wire those calls into your scheduler of choice (systemd timer, cron, GitHub Actions, Cloudflare Workers cron, etc.).
 
+## Quick start: running `hermes-mine-bean` inside Hermes Agent
+
+[Hermes Agent](https://hermes-agent.nousresearch.com/) is Nous Research's managed AI agent runtime with a native cron primitive and the `agentskills.io` open spec.
+
+1. **Install Hermes Agent** following [the official docs](https://hermes-agent.nousresearch.com/docs).
+2. **Add this repo as a skill tap and install the skill:**
+
+   ```bash
+   hermes skills tap add damo-nu11/minebean-skills
+   hermes skills install damo-nu11/minebean-skills/hermes-mine-bean
+   ```
+
+3. **Set required env vars.** Hermes will prompt for these on first use, or you can run `hermes setup`:
+   - `AGENT_PRIVATE_KEY` — fresh EOA's private key
+   - `AGENT_ADDRESS` — fresh EOA's public address
+   - `BASE_RPC_URL` — Base mainnet RPC
+
+4. **Schedule it.** Two options:
+
+   **Agent-driven (LLM in the loop, supports notifications and conditional logic):**
+   ```bash
+   hermes cron create "every 25m" "Run one mine-bean mining batch" --skill hermes-mine-bean
+   ```
+
+   **Direct script (zero Claude API cost per fire):**
+   ```bash
+   hermes cron create "every 25m" \
+     --no-agent \
+     --script scripts/mine-batch.sh \
+     --name minebean-mining \
+     --deliver telegram
+   ```
+
+5. **Fund the EOA** with a small amount of ETH on Base (~0.01 ETH covers many days at default config).
+
+The `--no-agent` mode runs the bash loop directly without invoking Claude. Same on-chain effect, zero Anthropic API spend per fire. You only pay Base gas.
+
 ## Defaults are intentionally tiny
 
-The default `mine-bean` config deploys 0.0000025 ETH across all 25 blocks per round = ~0.0000625 ETH total. At one fire per 5 minutes, that's roughly $0.05 per day at typical ETH prices. This is by design. A misconfigured cron or a bug shouldn't be able to drain meaningful funds.
+The default `aeon-mine-bean` config deploys 0.0000025 ETH across all 25 blocks per round = ~0.0000625 ETH total. At one fire per 5 minutes, that's roughly $0.05 per day at typical ETH prices. This is by design. A misconfigured cron or a bug shouldn't be able to drain meaningful funds.
 
 There is a hardcoded safety cap of 0.001 ETH per round in `scripts/deploy.sh`. Editing the cap is intentional. If you raise it, you've consciously removed the footgun rail.
 
@@ -73,7 +111,7 @@ There is a hardcoded safety cap of 0.001 ETH per round in `scripts/deploy.sh`. E
 | AutoMiner | `0x31358496900D600B2f523d6EdC4933E78F72De89` |
 | Staking | `0xfe177128Df8d336cAf99F787b72183D1E68Ff9c2` |
 
-Full reference: [`mine-bean/references/contracts.md`](./mine-bean/references/contracts.md)
+Full reference: [`aeon-mine-bean/references/contracts.md`](./aeon-mine-bean/references/contracts.md)
 
 ## Caveats
 
