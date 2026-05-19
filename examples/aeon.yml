@@ -1,0 +1,33 @@
+# Example AEON Framework config snippet for the mine-bean skill.
+# Drop this into your aeon.yml under the `schedules:` and `skills:` keys.
+#
+# Required secrets in your forked AEON repo (Settings -> Secrets and variables -> Actions):
+#   AGENT_PRIVATE_KEY      EOA private key with a small amount of ETH on Base
+#   AGENT_ADDRESS          Public address matching AGENT_PRIVATE_KEY
+#   BASE_RPC_URL           Base mainnet RPC endpoint
+#
+# Optional secrets / repo vars (any can be omitted to use defaults):
+#   DEPLOY_BLOCKS              default = all 25 blocks
+#   DEPLOY_PER_BLOCK_WEI       default = 2500000000000 (0.0000025 ETH, contract min)
+#   CLAIM_THRESHOLD_ETH        default = 10000000000000000 (0.01 ETH); set 0 to disable
+#   CLAIM_THRESHOLD_BEAN       default = 1000000000000000000 (1 BEAN); set 0 to disable
+#   DRY_RUN                    default = false; set true to log without sending
+
+schedules:
+  - cron: "*/5 * * * *"     # every 5 minutes (GitHub Actions minimum)
+    skill: mine-bean
+
+skills:
+  mine-bean:
+    path: skills/mine-bean
+    description: Autonomously mine $BEAN on MineBean (Base) once per cron tick.
+    env:
+      AGENT_PRIVATE_KEY: "${{ secrets.AGENT_PRIVATE_KEY }}"
+      AGENT_ADDRESS: "${{ secrets.AGENT_ADDRESS }}"
+      BASE_RPC_URL: "${{ secrets.BASE_RPC_URL }}"
+      # Optional overrides — uncomment any you want to set
+      # DEPLOY_BLOCKS: "0,5,10,15,20"
+      # DEPLOY_PER_BLOCK_WEI: "5000000000000"
+      # CLAIM_THRESHOLD_ETH: "20000000000000000"
+      # CLAIM_THRESHOLD_BEAN: "5000000000000000000"
+      # DRY_RUN: "true"
